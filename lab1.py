@@ -1,42 +1,49 @@
 from decimal import *
 
 
-def prec(o): #приоритет оператора
-    if o == '*':
-        return 3
-    elif o == '/':
+def priority_of(o):
+    if o == '*' or o == '/':
         return 2
-    elif o == '+':
+    elif o == '+' or o == '-':
         return 1
-    elif o == '-':
-        return 1
+
+
+def handle_operator(final_list, stack_of_operators, token):
+    if len(stack_of_operators) > 0:
+        temp_token = stack_of_operators[len(stack_of_operators) - 1]
+        while len(stack_of_operators) > 0 and temp_token != '(':
+            if priority_of(token) <= priority_of(temp_token):
+                final_list.append(stack_of_operators.pop())
+            else:
+                break
+
+    stack_of_operators.append(token)
+
+
+def handle_right_parenthesis(final_list, stack_of_operators):
+    temp_token = stack_of_operators[len(stack_of_operators) - 1]
+
+    while temp_token != '(':
+        final_list.append(stack_of_operators.pop())
+        temp_token = stack_of_operators[len(stack_of_operators) - 1]
+        if temp_token == '(':
+            stack_of_operators.pop()
 
 
 def get_postfix(expr):
     final_list = []
     stack_of_operators = []
-    token_list = expr.split() #разделение выражения
+    token_list = expr.split()
+
     for token in token_list:
         if token not in ('-', '+', '*', '/', '(', ')'):
             final_list.append(token)
         elif token in ('-', '+', '*', '/'):
-            if len(stack_of_operators) > 0:
-                temp_token = stack_of_operators[len(stack_of_operators) - 1] # вершина стека операторов 
-                while len(stack_of_operators) > 0 and temp_token != '(':
-                    if prec(token) <= prec(temp_token): # сравнивание приоритет операции 
-                        final_list.append(stack_of_operators.pop())
-                    else:
-                        break
-            stack_of_operators.append(token)
+            handle_operator(final_list, stack_of_operators, token)
         elif token == '(':
             stack_of_operators.append(token)
         elif token == ')':
-            temp_token = stack_of_operators[len(stack_of_operators) - 1] 
-            while temp_token != '(':
-                final_list.append(stack_of_operators.pop())
-                temp_token = stack_of_operators[len(stack_of_operators) - 1]
-                if temp_token == '(':
-                    stack_of_operators.pop()
+            handle_right_parenthesis(final_list, stack_of_operators)
 
     while len(stack_of_operators) > 0:
         final_list.append(stack_of_operators.pop())
@@ -45,21 +52,22 @@ def get_postfix(expr):
 
 def calculate_postfix(postfix_exp):
     stack = []
+
     for x in postfix_exp:
         if x in ('+', '-', '*', '/'):
             b = stack.pop()
             a = stack.pop()
             if x == "+":
-                result = a + b
+                stack.append(a + b)
             elif x == "-":
-                result = a - b
+                stack.append(a - b)
             elif x == "*":
-                result = a * b
+                stack.append(a * b)
             else:
-                result = a / b
-            stack.append(result)
+                stack.append(a / b)
         else:
             stack.append(Decimal(x))
+
     if len(stack) == 1:
         return stack.pop()
 
@@ -75,5 +83,5 @@ while True:
         calculate()
     except DivisionByZero:
         print('На ноль делить нельзя!')
-    except IndexError: 
+    except IndexError:
         print('Неверное выражение.')
